@@ -29,7 +29,7 @@ FOTOS = [
     ("Into the Jaws of Death 23-0455M edit.jpg", "Into the Jaws of Death, Robert F. Sargent, U.S. Coast Guard (domínio público)"),
     ("Surrender of Japan - USS Missouri.jpg", "Rendição do Japão no USS Missouri, Army Signal Corps (domínio público)"),
 ]
-UA = {"User-Agent": "ArchiveStudioAI/2.0 (https://github.com/FelipeGomes070898/ARCHIVE-STUDIO-AI)"}
+UA = {"User-Agent": "ArchiveStudioAI/2.0 (https://github.com/FelipeGomes070898/ARCHIVE-STUDIO-AI-2)"}
 
 
 def baixar(nome, destino):
