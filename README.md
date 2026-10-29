@@ -37,7 +37,7 @@ Se o seu PC não tiver GPU NVIDIA, o estúdio funciona do mesmo jeito: escolha *
 ## Google Colab
 
 1. Abra `colab/Archive_Studio_Colab.ipynb` no Colab e ative a GPU.
-2. **Repositório privado:** nos *Secrets* do Colab (ícone 🔑), crie `GITHUB_TOKEN` e ative "Acesso ao notebook". O token se cria em github.com → Settings → Developer settings → Personal access tokens → Fine-grained, com acesso só a este repositório e permissão *Contents: Read-only*. Sem ele o Colab não consegue baixar o código (erro `git clone ... exit status 128`).
+2. O repositório é público: a célula 1 baixa o código sem login. Se um dia você torná-lo privado, a célula pede um token do GitHub (ou lê o segredo `GITHUB_TOKEN` dos *Secrets* do Colab). Esse token se cria em github.com → Settings → Developer settings → Fine-grained tokens, com permissão *Contents: Read-only*.
 3. Rode as 3 células. O painel aparece dentro do Colab e também num link externo protegido por token.
 
 A célula 1 baixa o branch indicado no campo `BRANCH`.

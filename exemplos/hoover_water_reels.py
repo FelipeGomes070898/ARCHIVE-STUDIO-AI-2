@@ -219,7 +219,7 @@ DESCRIPTION = (
     "Maps and diagrams are simplified animated illustrations. Lake Mead elevations are approximate "
     "(source: U.S. Bureau of Reclamation). Music and sound effects were synthesized for this video.")
 
-UA = {"User-Agent": "ArchiveStudioAI/2.0 (https://github.com/FelipeGomes070898/ARCHIVE-STUDIO-AI)"}
+UA = {"User-Agent": "ArchiveStudioAI/2.0 (https://github.com/FelipeGomes070898/ARCHIVE-STUDIO-AI-2)"}
 
 
 def fetch(aid, dest):
