@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARCHIVE STUDIO AI</title>
+<style>
+:root{--bg:#0f1115;--panel:#171a21;--line:#2a2f3a;--txt:#e7e9ee;--mut:#9aa3b2;--acc:#e0a526;--ok:#3fb950;--bad:#f85149}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.45 system-ui,Segoe UI,Roboto,sans-serif}
+header{display:flex;gap:16px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:18px;margin:0;letter-spacing:.06em}
+header h1 b{color:var(--acc)}
+nav button{background:none;border:0;color:var(--mut);padding:8px 12px;cursor:pointer;font-size:15px;border-radius:6px}
+nav button.on{color:var(--txt);background:var(--panel)}
+#hw{margin-left:auto;color:var(--mut);font-size:13px}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 80px}
+section{display:none}section.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+h2{font-size:17px;margin:0 0 12px}
+label{display:block;color:var(--mut);font-size:13px;margin:10px 0 4px}
+input,select,textarea{width:100%;background:#0c0e12;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:8px;font:inherit}
+textarea{resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 14px}
+button.b{background:var(--acc);color:#111;border:0;border-radius:6px;padding:9px 16px;font-weight:600;cursor:pointer}
+button.s{background:#262b36;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.mut{color:var(--mut);font-size:13px}
+.bar{height:8px;background:#0c0e12;border-radius:4px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .4s}
+pre#log{background:#0c0e12;border:1px solid var(--line);border-radius:6px;padding:8px;height:180px;overflow:auto;font-size:12px;white-space:pre-wrap;margin:0}
+.scene{display:grid;grid-template-columns:200px 1fr;gap:12px;border-top:1px solid var(--line);padding:12px 0}
+.scene img{width:200px;border-radius:6px;background:#000;aspect-ratio:16/9;object-fit:cover}
+.scene .n{font-weight:600;color:var(--acc)}
+.tag{display:inline-block;font-size:12px;padding:1px 7px;border-radius:9px;background:#262b36;color:var(--mut);margin-left:6px}
+.tag.ai{background:#3a2d0c;color:var(--acc)}
+.tag.err{background:#3a1414;color:var(--bad)}
+.plist div{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--line);gap:8px}
+video{width:100%;border-radius:8px;background:#000}
+a{color:var(--acc)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+@media (max-width:640px){.scene{grid-template-columns:1fr}.scene img{width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <h1>ARCHIVE <b>STUDIO</b> AI</h1>
+  <nav>
+    <button data-tab="novo" class="on">Novo vídeo</button>
+    <button data-tab="projetos">Projetos</button>
+    <button data-tab="projeto" id="tabProj" hidden>Projeto aberto</button>
+    <button data-tab="config">Configurações</button>
+  </nav>
+  <span id="hw"></span>
+</header>
+<main>
+
+<section id="novo" class="on">
+  <div class="card">
+    <h2>1. Conteúdo</h2>
+    <label>Título (opcional — a IA cria se vazio)</label><input id="f_title">
+    <label>Tema do documentário</label>
+    <textarea id="f_topic" rows="2" placeholder="Ex.: A construção do Canal do Panamá"></textarea>
+    <label>OU cole o seu roteiro pronto (cada parágrafo vira uma ou mais cenas)</label>
+    <textarea id="f_script_text" rows="4" placeholder="Opcional. Se preencher, o tema é ignorado."></textarea>
+    <div class="grid">
+      <div><label>Duração (minutos)</label><input id="f_minutes" type="number" min="0.5" max="60" step="0.5" value="3"></div>
+      <div><label>Estilo</label><select id="f_style"></select></div>
+      <div><label>Formato</label><select id="f_aspect"><option>16:9</option><option>9:16</option><option>1:1</option></select></div>
+      <div><label>Resolução</label><select id="f_res"><option value="1080">1080p</option><option value="720">720p</option><option value="480">480p (teste)</option></select></div>
+    </div>
+    <p class="mut" id="styleDesc"></p>
+  </div>
+  <div class="card">
+    <h2>2. Voz</h2>
+    <div class="grid">
+      <div><label>Motor de voz</label><select id="f_tts_engine"></select></div>
+      <div><label>Idioma</label><select id="f_lang"></select></div>
+      <div><label>Voz</label><select id="f_voice"></select></div>
+      <div><label>Velocidade</label><input id="f_speed" type="number" min="0.7" max="1.4" step="0.05" value="1"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>3. Imagens e vídeo (sua GPU)</h2>
+    <div class="grid">
+      <div><label>Gerador de imagens</label><select id="f_image_engine"></select></div>
+      <div><label>Vídeo por IA</label><select id="f_video_engine"></select></div>
+      <div><label>Câmera nas cenas sem vídeo IA</label><select id="f_camera">
+        <option value="kenburns">Ken Burns (zoom e pan)</option><option value="parallax">Parallax 2.5D (profundidade)</option></select></div>
+      <div><label>Legendas no vídeo</label><select id="f_subtitles"><option value="1">Sim</option><option value="0">Não</option></select></div>
+      <div><label>Volume da música (se enviar uma)</label><input id="f_music_volume" type="number" min="0" max="1" step="0.02" value="0.12"></div>
+    </div>
+    <p class="mut">Cenas sem vídeo por IA usam movimento de câmera (Ken Burns ou parallax 2.5D com mapa de profundidade). O nº de clipes de IA fica em Configurações.</p>
+  </div>
+  <div class="row">
+    <button class="b" id="btnAuto">Gerar vídeo completo</button>
+    <button class="s" id="btnPlan">Só o roteiro (revisar antes)</button>
+    <span class="mut" id="newMsg"></span>
+  </div>
+</section>
+
+<section id="projetos">
+  <div class="card"><h2>Projetos</h2><div class="plist" id="plist"></div></div>
+</section>
+
+<section id="projeto">
+  <div class="card">
+    <h2 id="pTitle">Projeto</h2>
+    <div class="row" style="margin-top:0">
+      <button class="b" id="btnProduce">Produzir / atualizar vídeo</button>
+      <button class="s" id="btnReplan">Refazer roteiro</button>
+      <button class="s" id="btnCancel">Cancelar</button>
+      <label class="s" style="margin:0;padding:7px 12px;border-radius:6px;background:#262b36;cursor:pointer">
+        Enviar música <input type="file" id="musicFile" accept="audio/*" hidden></label>
+      <span class="mut" id="musicName"></span>
+    </div>
+    <p class="mut" id="jobStage"></p>
+    <div class="bar"><i id="jobBar"></i></div>
+    <pre id="log"></pre>
+  </div>
+  <div class="card" id="finalCard" hidden>
+    <h2>Resultado</h2>
+    <video id="finalVideo" controls preload="metadata"></video>
+    <div class="row" id="downloads"></div>
+  </div>
+  <div class="card">
+    <div class="row" style="margin-top:0;justify-content:space-between">
+      <h2 style="margin:0">Cenas <span class="mut" id="sceneCount"></span></h2>
+      <div class="row" style="margin:0"><button class="s" id="btnAdd">+ Cena</button><button class="b" id="btnSave">Salvar edições</button></div>
+    </div>
+    <div id="scenes"></div>
+  </div>
+</section>
+
+<section id="config">
+  <div class="card">
+    <h2>Roteiro (IA de texto)</h2>
+    <div class="grid">
+      <div><label>Motor</label><select id="s_script_engine"></select></div>
+      <div><label>Chave Gemini <span id="keyState" class="mut"></span></label><input id="s_gemini_key" type="password" placeholder="cole para trocar"></div>
+      <div><label>Modelo Gemini</label><input id="s_gemini_model"></div>
+      <div><label>URL do LLM local</label><input id="s_local_llm_url"></div>
+      <div><label>Modelo local</label><input id="s_local_llm_model"></div>
+    </div>
+    <div class="row"><button class="s" data-test="script">Testar IA de texto</button></div>
+  </div>
+  <div class="card">
+    <h2>Padrões de geração</h2>
+    <div class="grid">
+      <div><label>Voz padrão</label><select id="s_tts_engine"></select></div>
+      <div><label>Imagens padrão</label><select id="s_image_engine"></select></div>
+      <div><label>Vídeo por IA padrão</label><select id="s_video_engine"></select></div>
+      <div><label>Máx. de clipes de IA por vídeo</label><input id="s_max_ai_clips" type="number" min="0" max="200"></div>
+      <div><label>Segundos por clipe de IA</label><input id="s_ai_clip_seconds" type="number" min="2" max="10" step="0.5"></div>
+      <div><label>Perfil de memória da GPU</label><select id="s_gpu_profile">
+        <option value="auto">Automático</option><option value="rapido">Rápido (24 GB+)</option>
+        <option value="equilibrado">Equilibrado (12-16 GB)</option><option value="economico">Econômico (6-8 GB)</option></select></div>
+      <div><label>Token Hugging Face (opcional) <span id="hfState" class="mut"></span></label><input id="s_hf_token" type="password"></div>
+    </div>
+    <div class="row"><button class="s" data-test="gpu">Verificar GPU</button></div>
+  </div>
+  <div class="card">
+    <h2>Ponte Maestro / WanGP (opcional)</h2>
+    <p class="mut">Usa o Maestro que você já instalou (Pinokio) para gerar os clipes com LTX-2, Wan 2.2 14B, MiniMax H3 etc.
+      Licença do Maestro/WanGP: uso não comercial do programa; os vídeos gerados podem ser usados comercialmente
+      com o aviso "feito com WanGP" (o sistema já coloca esse aviso na descrição).</p>
+    <div class="grid">
+      <div><label>Pasta com wgp.py (ex.: .../maestro/app)</label><input id="s_maestro_dir"></div>
+      <div><label>Python do Maestro (vazio = detectar)</label><input id="s_maestro_python"></div>
+      <div><label>Modelo (model_type)</label><input id="s_maestro_model" list="mmodels"></div>
+      <div><label>Argumentos extras</label><input id="s_maestro_args"></div>
+      <div><label>Passos (0 = padrão do modelo)</label><input id="s_maestro_steps" type="number" min="0" max="80"></div>
+    </div>
+    <datalist id="mmodels"><option value="ltx2_22B_distilled"><option value="ltx2_distilled"><option value="i2v_2_2">
+      <option value="i2v_2_2_Enhanced_Lightning_v2"><option value="minimax_h3"><option value="hunyuan_1_5_480_i2v_step_distilled"></datalist>
+    <div class="row"><button class="s" data-test="maestro">Testar pasta do Maestro</button></div>
+  </div>
+  <div class="row"><button class="b" id="btnSaveCfg">Salvar configurações</button><span id="cfgMsg" class="mut"></span></div>
+</section>
+</main>
+
+<script>
+const T = new URLSearchParams(location.search).get('t') || '';
+const $ = id => document.getElementById(id);
+const withT = u => T ? u + (u.includes('?') ? '&' : '?') + 't=' + encodeURIComponent(T) : u;
+async function api(url, method = 'GET', body) {
+  const opt = {method, headers: {}};
+  if (body instanceof FormData) opt.body = body;
+  else if (body !== undefined) { opt.body = JSON.stringify(body); opt.headers['Content-Type'] = 'application/json'; }
+  const r = await fetch(withT(url), opt);
+  const j = await r.json().catch(() => ({error: 'Resposta inválida do servidor'}));
+  if (!r.ok) throw new Error(j.error || ('Erro ' + r.status));
+  return j;
+}
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const fill = (sel, items, val) => { sel.innerHTML = items.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join(''); if (val !== undefined) sel.value = val; };
+let OPT, CUR = null, LASTJOB = 0;
+
+function tab(name) {
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === name));
+  if (name === 'projetos') loadProjects();
+}
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => tab(b.dataset.tab));
+
+function voiceList() {
+  fill($('f_voice'), OPT.voices[$('f_tts_engine').value][$('f_lang').value]);
+}
+async function init() {
+  OPT = await api('/api/options');
+  const st = await api('/api/status');
+  const s = st.settings;
+  fill($('f_style'), OPT.styles.map(x => [x.id, x.name]), 'cinematico');
+  fill($('f_lang'), Object.entries(OPT.langs), 'pt-BR');
+  for (const p of ['f_', 's_']) {
+    fill($(p + 'tts_engine'), Object.entries(OPT.tts), s.tts_engine);
+    fill($(p + 'image_engine'), Object.entries(OPT.images), s.image_engine);
+    fill($(p + 'video_engine'), Object.entries(OPT.videos), s.video_engine);
+  }
+  fill($('s_script_engine'), Object.entries(OPT.script), s.script_engine);
+  voiceList();
+  $('f_tts_engine').onchange = voiceList; $('f_lang').onchange = voiceList;
+  const desc = () => $('styleDesc').textContent = (OPT.styles.find(x => x.id === $('f_style').value) || {}).desc || '';
+  $('f_style').onchange = desc; desc();
+  loadSettings(s);
+  showHw(st);
+  try { const saved = JSON.parse(localStorage.getItem('as_form') || '{}'); for (const [k, v] of Object.entries(saved)) if ($('f_' + k) && k !== 'script_text' && k !== 'topic' && k !== 'title') { $('f_' + k).value = v; if (k === 'lang' || k === 'tts_engine') voiceList(); } } catch (e) {}
+  if (st.job.status === 'running' && st.job.slug) openProject(st.job.slug);
+  poll();
+}
+function showHw(st) {
+  const g = st.gpu;
+  $('hw').innerHTML = (g.cuda ? `<span class="ok">GPU: ${esc(g.name)} · ${g.vram_gb} GB</span>` : '<span class="bad">Sem GPU CUDA</span>') +
+    (st.ffmpeg ? '' : ' · <span class="bad">ffmpeg ausente</span>') + ` · v${esc(st.version)}`;
+}
+function loadSettings(s) {
+  for (const k of ['gemini_model', 'local_llm_url', 'local_llm_model', 'max_ai_clips', 'ai_clip_seconds', 'gpu_profile',
+                   'maestro_dir', 'maestro_python', 'maestro_model', 'maestro_args', 'maestro_steps']) $('s_' + k).value = s[k] ?? '';
+  $('keyState').textContent = s.gemini_key_set ? '(configurada)' : '(não configurada)';
+  $('hfState').textContent = s.hf_token_set ? '(configurado)' : '';
+}
+$('btnSaveCfg').onclick = async () => {
+  const body = {};
+  for (const el of document.querySelectorAll('[id^="s_"]')) body[el.id.slice(2)] = el.type === 'number' ? Number(el.value) : el.value;
+  try { const s = await api('/api/settings', 'POST', body); loadSettings(s); $('s_gemini_key').value = ''; $('s_hf_token').value = '';
+    $('cfgMsg').textContent = 'Salvo.'; } catch (e) { $('cfgMsg').textContent = e.message; }
+};
+document.querySelectorAll('[data-test]').forEach(b => b.onclick = async () => {
+  $('btnSaveCfg').click();
+  await new Promise(r => setTimeout(r, 300));
+  $('cfgMsg').textContent = 'Testando...';
+  try { const r = await api('/api/settings/test', 'POST', {what: b.dataset.test}); $('cfgMsg').innerHTML = `<span class="${r.ok ? 'ok' : 'bad'}">${esc(r.message)}</span>`; }
+  catch (e) { $('cfgMsg').innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+});
+
+function form() {
+  const f = {};
+  for (const k of Object.keys(OPT.form)) { const el = $('f_' + k); if (el) f[k] = el.value; }
+  f.minutes = Number(f.minutes); f.speed = Number(f.speed); f.res = Number(f.res);
+  f.music_volume = Number(f.music_volume); f.subtitles = f.subtitles === '1';
+  try { localStorage.setItem('as_form', JSON.stringify(f)); } catch (e) {}
+  return f;
+}
+async function create(action) {
+  const f = form();
+  if (!f.topic.trim() && !f.script_text.trim()) { $('newMsg').textContent = 'Informe um tema ou cole um roteiro.'; return; }
+  try { const p = await api('/api/projects', 'POST', {form: f, action}); $('newMsg').textContent = ''; openProject(p.slug, p); }
+  catch (e) { $('newMsg').textContent = e.message; }
+}
+$('btnAuto').onclick = () => create('auto');
+$('btnPlan').onclick = () => create('plan');
+
+async function loadProjects() {
+  const list = await api('/api/projects');
+  $('plist').innerHTML = list.length ? list.map(p => `<div><span><b>${esc(p.title || p.slug)}</b>
+    <span class="mut"> · ${p.scenes} cenas · ${esc(p.created.replace('T', ' '))}${p.final ? ' · <span class="ok">vídeo pronto</span>' : ''}</span></span>
+    <button class="s" data-open="${esc(p.slug)}">Abrir</button></div>`).join('') : '<p class="mut">Nenhum projeto ainda.</p>';
+  document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => openProject(b.dataset.open));
+}
+
+async function openProject(slug, data) {
+  CUR = data || await api('/api/projects/' + slug);
+  $('tabProj').hidden = false; tab('projeto'); render();
+}
+const file = rel => withT(`/files/${CUR.slug}/${rel}`);
+function render() {
+  const p = CUR, f = p.form;
+  $('pTitle').textContent = p.title || f.topic || p.slug;
+  $('musicName').textContent = f.music ? 'Música: ' + f.music : '';
+  $('sceneCount').textContent = p.scenes.length ? `(${p.scenes.length} · ~${(p.scenes.reduce((a, s) => a + (s.duration || 8.5), 0) / 60).toFixed(1)} min)` : '';
+  const ai = new Set(p.ai_ids || []);
+  const motions = [['', 'Automático'], ['zoom_in', 'Zoom in'], ['zoom_out', 'Zoom out'], ['pan_left', 'Pan esquerda'],
+                   ['pan_right', 'Pan direita'], ['pan_up', 'Pan cima'], ['pan_down', 'Pan baixo'],
+                   ['parallax_in', 'Parallax aproximar'], ['parallax_out', 'Parallax afastar'],
+                   ['parallax_left', 'Parallax esquerda'], ['parallax_right', 'Parallax direita']];
+  $('scenes').innerHTML = p.scenes.map((s, i) => `<div class="scene" data-id="${s.id}">
+    <div>${s.image ? `<img src="${file(s.image)}" loading="lazy">` : '<img alt="">'}
+      <div class="row"><button class="s" data-new="${s.id}">Nova imagem</button>
+      <label class="s" style="margin:0;padding:7px 10px;border-radius:6px;background:#262b36;cursor:pointer">Enviar
+        <input type="file" accept="image/*" data-up="${s.id}" hidden></label></div></div>
+    <div><span class="n">Cena ${i + 1}</span>${s.duration ? `<span class="tag">${s.duration.toFixed(1)} s</span>` : ''}
+      ${ai.has(s.id) ? '<span class="tag ai">vídeo IA</span>' : ''}${s.ai_error ? `<span class="tag err" title="${esc(s.ai_error)}">IA falhou → câmera</span>` : ''}
+      ${s.image_upload ? '<span class="tag">imagem enviada</span>' : ''}
+      <label>Narração</label><textarea rows="3" data-k="narration">${esc(s.narration)}</textarea>
+      <label>Descrição da imagem (prompt)</label><textarea rows="2" data-k="image_prompt">${esc(s.image_prompt)}</textarea>
+      <div class="grid"><div><label>Vídeo por IA</label><select data-k="use_ai">
+        <option value="">Automático</option><option value="1">Sim</option><option value="0">Não</option></select></div>
+        <div><label>Movimento de câmera</label><select data-k="motion">${motions.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></div>
+        <div><label>&nbsp;</label><button class="s" data-del="${s.id}">Remover cena</button></div></div></div></div>`).join('');
+  p.scenes.forEach(s => { const el = document.querySelector(`.scene[data-id="${s.id}"]`);
+    el.querySelector('[data-k="use_ai"]').value = s.use_ai === true ? '1' : s.use_ai === false ? '0' : '';
+    el.querySelector('[data-k="motion"]').value = s.motion || ''; });
+  document.querySelectorAll('[data-new]').forEach(b => b.onclick = async () => { await saveScenes(); CUR = await api(`/api/projects/${CUR.slug}/scenes/${b.dataset.new}/new-image`, 'POST'); render(); });
+  document.querySelectorAll('[data-up]').forEach(inp => inp.onchange = async () => { const fd = new FormData(); fd.append('file', inp.files[0]);
+    await saveScenes(); CUR = await api(`/api/projects/${CUR.slug}/scenes/${inp.dataset.up}/upload`, 'POST', fd); render(); });
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { b.closest('.scene').remove(); });
+  const fin = p.final || {};
+  $('finalCard').hidden = !fin.video;
+  if (fin.video) {
+    const src = file(fin.video) + (T ? '&' : '?') + 'v=' + encodeURIComponent(fin.created || '');
+    if ($('finalVideo').dataset.src !== src) { $('finalVideo').src = src; $('finalVideo').dataset.src = src; }
+    const dl = (rel, label) => rel ? `<a class="s" style="text-decoration:none;padding:7px 12px;border-radius:6px;background:#262b36;color:var(--txt)" href="${file(rel)}${T ? '&' : '?'}download=1">${label}</a>` : '';
+    $('downloads').innerHTML = dl(fin.video, 'Baixar vídeo') + dl(fin.srt, 'Legendas .srt') + dl(fin.thumb, 'Thumbnail') +
+      dl(fin.roteiro, 'Roteiro') + dl(fin.descricao, 'Descrição') + `<span class="mut">${(fin.duration / 60).toFixed(1)} min · ${fin.size_mb} MB</span>`;
+  }
+}
+function collectScenes() {
+  return [...document.querySelectorAll('.scene')].map(el => {
+    const g = k => el.querySelector(`[data-k="${k}"]`).value;
+    const id = el.dataset.id === 'new' ? null : Number(el.dataset.id);
+    const old = CUR.scenes.find(s => s.id === id) || {};
+    return {id, narration: g('narration'), image_prompt: g('image_prompt'), motion: g('motion'),
+            use_ai: g('use_ai') === '1' ? true : g('use_ai') === '0' ? false : null, seed: old.seed};
+  });
+}
+async function saveScenes() { CUR = await api('/api/projects/' + CUR.slug, 'PUT', {scenes: collectScenes()}); }
+$('btnSave').onclick = async () => { try { await saveScenes(); render(); $('jobStage').textContent = 'Edições salvas.'; } catch (e) { alert(e.message); } };
+$('btnAdd').onclick = () => {
+  const div = document.createElement('div'); div.className = 'scene'; div.dataset.id = 'new';
+  div.innerHTML = `<div class="mut">Nova cena (salve para gerar)</div><div><label>Narração</label><textarea rows="3" data-k="narration"></textarea>
+    <label>Descrição da imagem</label><textarea rows="2" data-k="image_prompt"></textarea>
+    <select data-k="use_ai" hidden><option value=""></option></select><select data-k="motion" hidden><option value=""></option></select></div>`;
+  $('scenes').appendChild(div);
+};
+async function action(name) {
+  try { if (name !== 'plan' && document.querySelector('.scene')) await saveScenes(); await api(`/api/projects/${CUR.slug}/${name}`, 'POST'); }
+  catch (e) { alert(e.message); }
+}
+$('btnProduce').onclick = () => action('produce');
+$('btnReplan').onclick = () => { if (confirm('Refazer o roteiro substitui todas as cenas. Continuar?')) action('plan'); };
+$('btnCancel').onclick = () => api('/api/cancel', 'POST');
+$('musicFile').onchange = async () => { const fd = new FormData(); fd.append('file', $('musicFile').files[0]);
+  try { CUR = await api(`/api/projects/${CUR.slug}/music`, 'POST', fd); render(); } catch (e) { alert(e.message); } };
+
+async function poll() {
+  try {
+    const j = await api('/api/job');
+    const mine = CUR && j.slug === CUR.slug;
+    if (mine) {
+      $('jobBar').style.width = Math.round(j.progress * 100) + '%';
+      const label = {running: 'Rodando', done: 'Concluído', error: 'Erro', cancelled: 'Cancelado', idle: ''}[j.status];
+      $('jobStage').innerHTML = `${label}${j.stage && j.stage !== label ? ' · ' + esc(j.stage) : ''} · ${Math.round(j.progress * 100)}%` + (j.error ? ` · <span class="bad">${esc(j.error)}</span>` : '');
+      const log = $('log'), atEnd = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
+      log.textContent = j.log.join('\n'); if (atEnd) log.scrollTop = log.scrollHeight;
+    }
+    $('btnProduce').disabled = $('btnReplan').disabled = $('btnAuto').disabled = $('btnPlan').disabled = j.status === 'running';
+    const key = j.id + j.status + (j.stage || '');
+    if (mine && key !== LASTJOB) { LASTJOB = key; CUR = await api('/api/projects/' + CUR.slug); render(); }
+  } catch (e) { $('jobStage').textContent = 'Sem conexão com o servidor...'; }
+  setTimeout(poll, 1500);
+}
+init().catch(e => { document.body.insertAdjacentHTML('afterbegin', `<p class="bad" style="padding:12px">${esc(e.message)}</p>`); });
+</script>
+</body>
+</html>

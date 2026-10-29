@@ -1,0 +1,10 @@
+# Geração local na GPU (imagens e vídeo por IA). Instale ANTES o PyTorch com CUDA:
+#   https://pytorch.org/get-started/locally/
+-r requirements.txt
+diffusers>=0.37
+transformers>=4.51
+accelerate>=1.2
+safetensors>=0.4
+sentencepiece>=0.2
+ftfy>=6.2
+# Voz local opcional (Kokoro), instale à parte se quiser:  pip install "kokoro>=0.7" soundfile

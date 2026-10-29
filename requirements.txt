@@ -1,0 +1,8 @@
+# Base (abre o painel, roteiro, voz Edge TTS, câmera Ken Burns, montagem). Não precisa de GPU.
+flask>=3.0
+requests>=2.31
+numpy>=1.26
+pillow>=10.1
+opencv-python-headless>=4.9
+edge-tts>=6.1
+google-genai>=1.0
