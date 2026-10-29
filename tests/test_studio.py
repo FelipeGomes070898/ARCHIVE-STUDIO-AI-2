@@ -266,6 +266,17 @@ class StudioTests(unittest.TestCase):
         self.assertTrue((p.dir / "final" / "trilha.wav").exists())
         self.assertEqual([round(sh["t1"] - sh["t0"], 1) > 1 for sh in sc["shots"]], [True] * 3)
 
+    def test_long_title_duplicates_open(self):
+        """Títulos longos repetidos geram nomes com sufixo (-2, -3...) que precisam abrir de novo."""
+        title = "The Insane 200 Year Journey of the Channel Tunnel Between England and France"
+        slugs = [pipeline.Project.create({"title": title, "script_text": "x"}).slug for _ in range(4)]
+        self.assertEqual(len(set(slugs)), 4)
+        for slug in slugs:
+            self.assertLessEqual(len(slug), 50)
+            self.assertEqual(pipeline.Project.load(slug).slug, slug)
+        with self.assertRaises(FileNotFoundError):
+            pipeline.Project.load("../settings")
+
     def test_server_api(self):
         from studio import server
         c = server.app.test_client()

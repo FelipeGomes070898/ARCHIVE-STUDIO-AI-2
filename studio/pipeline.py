@@ -44,7 +44,7 @@ class Project:
     @classmethod
     def create(cls, form):
         config.ensure_dirs()
-        base = media.safe_name(form.get("title") or form.get("topic") or "projeto")
+        base = media.safe_name(form.get("title") or form.get("topic") or "projeto")[:44].strip("-") or "projeto"
         slug, n = base, 2
         while (config.PROJECTS / slug).exists():
             slug, n = f"{base}-{n}", n + 1
@@ -57,8 +57,10 @@ class Project:
 
     @classmethod
     def load(cls, slug):
-        p = cls(media.safe_name(slug, ""))
-        if not p.slug or not p.file.exists():
+        # Não recorta nem reescreve o nome: só aceita nomes de pasta válidos (sem "..", barras etc.).
+        ok = bool(re.fullmatch(r"[a-z0-9][a-z0-9-]{0,100}", slug or ""))
+        p = cls(slug if ok else "")
+        if not ok or not p.file.exists():
             raise FileNotFoundError(f"Projeto '{slug}' não encontrado.")
         p.data = json.loads(p.file.read_text(encoding="utf-8"))
         p.data["form"] = normalize_form(p.data.get("form", {}))
